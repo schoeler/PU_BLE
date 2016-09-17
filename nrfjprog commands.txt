@@ -1,0 +1,3 @@
+nrfjprog --family nrf52 --recover
+
+nrfjprog -p
