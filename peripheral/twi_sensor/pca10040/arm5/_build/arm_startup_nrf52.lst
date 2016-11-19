@@ -594,12 +594,12 @@ ductor\nRF_DeviceFamilyPack\8.7.1\Device\Include -IC:\Keil_v5\ARM\PACK\NordicSe
 miconductor\nRF_Drivers\4.0.0-2.alpha\common -IC:\Keil_v5\ARM\PACK\NordicSemico
 nductor\nRF_Drivers\4.0.0-2.alpha\config -IC:\Keil_v5\ARM\PACK\NordicSemiconduc
 tor\nRF_Drivers\4.0.0-2.alpha\delay -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\n
-RF_Drivers\4.0.0-2.alpha\gpiote -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_D
-rivers\4.0.0-2.alpha\hal -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\
-4.0.0-2.alpha\nrf_soc_nosd -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Driver
-s\4.0.0-2.alpha\twi_master -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Driver
-s\4.0.0-2.alpha\uart -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Examples\11.
-0.0-2.alpha\bsp -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2
+RF_Drivers\4.0.0-2.alpha\hal -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Driv
+ers\4.0.0-2.alpha\nrf_soc_nosd -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Dr
+ivers\4.0.0-2.alpha\twi_master -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Dr
+ivers\4.0.0-2.alpha\uart -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Examples
+\11.0.0-2.alpha\bsp -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0
+.0-2.alpha\fifo -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2
 .alpha\uart -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2.alp
 ha\util --predefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine
 ="__UVISION_VERSION SETA 521" --predefine="_RTE_ SETA 1" --predefine="NRF52 SET
@@ -610,9 +610,8 @@ NRF52_PAN_20 SETA 1" --predefine="NRF52_PAN_55 SETA 1" --predefine="NRF52_PAN_3
 -predefine="NRF52_PAN_62 SETA 1" --predefine="NRF52_PAN_36 SETA 1" --predefine=
 "NRF52_PAN_63 SETA 1" --predefine="NRF52_PAN_51 SETA 1" --predefine="NRF52_PAN_
 64 SETA 1" --predefine="CONFIG_GPIO_AS_PINRESET SETA 1" --predefine="BOARD_PCA1
-0040 SETA 1" --predefine="NRF52_PAN_12 SETA 1" --predefine="NRF52 SETA 1" --pre
-define="CONFIG_NFCT_PINS_AS_GPIOS SETA 1" --list=.\_build\arm_startup_nrf52.lst
- RTE\Device\nRF52832_xxAA\arm_startup_nrf52.s
+0040 SETA 1" --predefine="NRF52_PAN_12 SETA 1" --predefine="NRF52 SETA 1" --lis
+t=.\_build\arm_startup_nrf52.lst RTE\Device\nRF52832_xxAA\arm_startup_nrf52.s
 
 
 
@@ -1241,4 +1240,4 @@ Symbol: __main
       At line 340 in file RTE\Device\nRF52832_xxAA\arm_startup_nrf52.s
 Comment: __main used once
 2 symbols
-422 symbols in table
+421 symbols in table

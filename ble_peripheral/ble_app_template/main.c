@@ -46,6 +46,7 @@
 #include "nrf_delay.h"
 #include "app_util_platform.h"
 #include "nrf_drv_twi.h"
+#include "drv_si705x.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT  1                                          /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -55,14 +56,14 @@
 #define DEVICE_NAME                      "Ben"                       						    /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "NordicSemiconductor"                      /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL                 300                                        /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS       180                                        /**< The advertising timeout in units of seconds. */
+#define APP_ADV_TIMEOUT_IN_SECONDS       BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED      /**< The advertising timeout in units of seconds. */
 
 #define APP_TIMER_PRESCALER              0                                          /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE          4                                          /**< Size of timer operation queues. */
 
-#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(100, UNIT_1_25_MS)           /**< Minimum acceptable connection interval (0.1 seconds). */
-#define MAX_CONN_INTERVAL                MSEC_TO_UNITS(200, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (0.2 second). */
-#define SLAVE_LATENCY                    0                                          /**< Slave latency. */
+#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(201, UNIT_1_25_MS)           /**< Minimum acceptable connection interval (0.1 seconds). */
+#define MAX_CONN_INTERVAL                MSEC_TO_UNITS(201, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (0.2 second). */
+#define SLAVE_LATENCY                    8                                          /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                 MSEC_TO_UNITS(4000, UNIT_10_MS)            /**< Connection supervisory timeout (4 seconds). */
 
 #define FIRST_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER) /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
@@ -81,14 +82,16 @@
 static dm_application_instance_t        m_app_handle;                               /**< Application identifier allocated by device manager */
 
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;   /**< Handle of the current connection. */
+static ble_si705x_t                      m_si705x;                                      /**< LED Button Service instance. */
 
-/* YOUR_JOB: Declare all services structure your application is using
-static ble_xx_service_t                     m_xxs;
-static ble_yy_service_t                     m_yys;
-*/
+// YOUR_JOB: Declare all services structure your application is using
+//static ble_xx_service_t                     m_xxs;
+//static ble_yy_service_t                     m_yys;
+
 
 // YOUR_JOB: Use UUIDs for service(s) used in your application.
-static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}}; /**< Universally unique service identifiers. */
+static ble_uuid_t m_adv_uuids[] = { {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
+																		{BLE_UUID_BATTERY_SERVICE,            BLE_UUID_TYPE_BLE} }; /**< Universally unique service identifiers. */
 
                                    
 /**@brief Callback function for asserts in the SoftDevice.
@@ -112,21 +115,26 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  *
  * @details Initializes the timer module. This creates and starts application timers.
  */
+APP_TIMER_DEF(m_app_timer_id);
+
+void timer_timeout_handler(void * p_context);
+
+
 static void timers_init(void)
 {
 
     // Initialize timer module.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
-
     // Create timers.
 
     /* YOUR_JOB: Create any timers to be used by the application.
                  Below is an example of how to create a timer.
                  For every new timer needed, increase the value of the macro APP_TIMER_MAX_TIMERS by
-                 one.
+                 one.*/
     uint32_t err_code;
+	  //memset(&m_app_timer_id, 0, sizeof(m_app_timer_id));
     err_code = app_timer_create(&m_app_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
-    APP_ERROR_CHECK(err_code); */
+    APP_ERROR_CHECK(err_code); 
 }
 
 
@@ -148,9 +156,9 @@ static void gap_params_init(void)
                                           strlen(DEVICE_NAME));
     APP_ERROR_CHECK(err_code);
 
-    /* YOUR_JOB: Use an appearance value matching the application's use case.
-    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_);
-    APP_ERROR_CHECK(err_code); */
+    // YOUR_JOB: Use an appearance value matching the application's use case.
+    err_code = sd_ble_gap_appearance_set(0x1234);
+    APP_ERROR_CHECK(err_code); 
 
     memset(&gap_conn_params, 0, sizeof(gap_conn_params));
 
@@ -158,6 +166,7 @@ static void gap_params_init(void)
     gap_conn_params.max_conn_interval = MAX_CONN_INTERVAL;
     gap_conn_params.slave_latency     = SLAVE_LATENCY;
     gap_conn_params.conn_sup_timeout  = CONN_SUP_TIMEOUT;
+																					
 
     err_code = sd_ble_gap_ppcp_set(&gap_conn_params);
     APP_ERROR_CHECK(err_code);
@@ -189,10 +198,122 @@ static void on_yys_evt(ble_yy_service_t     * p_yy_service,
     }
 }*/
 
+static uint32_t temp_char_add(ble_si705x_t * p_si705x, const ble_si705x_init_t * p_si705x_init)
+{
+    ble_gatts_char_md_t char_md;
+    ble_gatts_attr_md_t cccd_md;
+    ble_gatts_attr_t    attr_char_value;
+    ble_uuid_t          ble_uuid;
+    ble_gatts_attr_md_t attr_md;
+
+    memset(&cccd_md, 0, sizeof(cccd_md));
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.write_perm);
+    cccd_md.vloc = BLE_GATTS_VLOC_STACK;
+    
+    memset(&char_md, 0, sizeof(char_md));
+    
+    char_md.char_props.read   = 1;
+    char_md.char_props.notify = 1;
+    char_md.p_char_user_desc  = NULL;
+    char_md.p_char_pf         = NULL;
+    char_md.p_user_desc_md    = NULL;
+    char_md.p_cccd_md         = &cccd_md;
+    char_md.p_sccd_md         = NULL;
+
+    ble_uuid.type = p_si705x->uuid_type;
+    ble_uuid.uuid = SI705x_UUID_TEMP_CHAR;
+
+    memset(&attr_md, 0, sizeof(attr_md));
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&attr_md.write_perm);
+    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+    attr_md.rd_auth    = 0;
+    attr_md.wr_auth    = 0;
+    attr_md.vlen       = 0;
+
+    memset(&attr_char_value, 0, sizeof(attr_char_value));
+
+    attr_char_value.p_uuid       = &ble_uuid;
+    attr_char_value.p_attr_md    = &attr_md;
+    attr_char_value.init_len     = sizeof(uint8_t)*3;
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = sizeof(uint8_t)*3;
+    attr_char_value.p_value      = NULL;
+
+    return sd_ble_gatts_characteristic_add(p_si705x->service_handle,
+                                               &char_md,
+                                               &attr_char_value,
+                                               &p_si705x->temp_char_handles);
+}
+
+static void temp_event_handler(uint8_t pin_no, uint8_t button_action)
+{
+	
+}
+	
+uint32_t ble_si705x_init(ble_si705x_t * p_si705x, const ble_si705x_init_t * p_si705x_init)
+{
+    uint32_t   err_code;
+    ble_uuid_t ble_uuid;
+
+    // Initialize service structure.
+    p_si705x->conn_handle       = BLE_CONN_HANDLE_INVALID;
+    p_si705x->si705x_handler = p_si705x_init->si705x_handler;
+
+    // Add service.
+    ble_uuid128_t base_uuid = {LBS_UUID_BASE};
+    err_code = sd_ble_uuid_vs_add(&base_uuid, &p_si705x->uuid_type);
+    VERIFY_SUCCESS(err_code);
+
+    ble_uuid.type = p_si705x->uuid_type;
+    ble_uuid.uuid = LBS_UUID_SERVICE;
+
+    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &p_si705x->service_handle);
+    VERIFY_SUCCESS(err_code);
+
+    // Add characteristics.
+    err_code = temp_char_add(p_si705x, p_si705x_init);
+    VERIFY_SUCCESS(err_code);
+
+    //err_code = led_char_add(p_lbs, p_lbs_init);
+    VERIFY_SUCCESS(err_code);
+
+    return NRF_SUCCESS;
+}
+
+
+/**@brief Function for handling write events to the LED characteristic.
+ *
+ * @param[in] p_lbs     Instance of LED Button Service to which the write applies.
+ * @param[in] led_state Written/desired state of the LED.
+ */
+static void si705x_handler(ble_si705x_t * p_lbs, uint8_t led_state)
+{
+    if (led_state)
+    {
+        //LEDS_ON(LEDBUTTON_LED_PIN);
+    }
+    else
+    {
+        //LEDS_OFF(LEDBUTTON_LED_PIN);
+    }
+}
+
 /**@brief Function for initializing services that will be used by the application.
  */
 static void services_init(void)
 {
+    uint32_t       err_code;
+    ble_si705x_init_t init;
+
+    init.si705x_handler = si705x_handler;
+
+    err_code = ble_si705x_init(&m_si705x, &init);
+    APP_ERROR_CHECK(err_code);
+	
     /* YOUR_JOB: Add code to initialize the services used by the application.
     uint32_t                           err_code;
     ble_xxs_init_t                     xxs_init;
@@ -278,10 +399,10 @@ static void conn_params_init(void)
 */
 static void application_timers_start(void)
 {
-    /* YOUR_JOB: Start your timers. below is an example of how to start a timer.
+    /* YOUR_JOB: Start your timers. below is an example of how to start a timer.*/
     uint32_t err_code;
-    err_code = app_timer_start(m_app_timer_id, TIMER_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code); */
+    err_code = app_timer_start(m_app_timer_id, 32000, NULL);
+    APP_ERROR_CHECK(err_code);
    
 }
 
@@ -329,6 +450,30 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
     }
 }
 
+void ble_si705x_on_ble_evt(ble_si705x_t *p_si705x, ble_evt_t * p_ble_evt)
+{
+    uint32_t err_code;
+
+    switch (p_ble_evt->header.evt_id)
+     {
+        case BLE_GAP_EVT_CONNECTED:
+            p_si705x->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            break;
+
+        case BLE_GAP_EVT_DISCONNECTED:
+					  UNUSED_PARAMETER(p_ble_evt);
+					  p_si705x->conn_handle = BLE_CONN_HANDLE_INVALID;
+            break;
+
+				case BLE_GATTS_EVT_WRITE:
+						p_si705x->cccd_handle = p_ble_evt->evt.gatts_evt.params.authorize_request.request.write.handle;
+						break;
+        default:
+            // No implementation needed.
+            break;
+    }
+
+}
 
 /**@brief Function for handling the Application's BLE Stack events.
  *
@@ -368,7 +513,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     dm_ble_evt_handler(p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
-    bsp_btn_ble_on_ble_evt(p_ble_evt);
+    ble_si705x_on_ble_evt(&m_si705x, p_ble_evt);
     on_ble_evt(p_ble_evt);
     ble_advertising_on_ble_evt(p_ble_evt);
     /*YOUR_JOB add calls to _on_ble_evt functions from each service your application is using
@@ -414,6 +559,13 @@ static void ble_stack_init(void)
     
     // Enable BLE stack.
     err_code = softdevice_enable(&ble_enable_params);
+    APP_ERROR_CHECK(err_code);
+	
+	  // From experimental blinky
+	  ble_gap_addr_t addr;
+    err_code = sd_ble_gap_address_get(&addr);
+    APP_ERROR_CHECK(err_code);
+    err_code = sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &addr);
     APP_ERROR_CHECK(err_code);
 
     // Register with the SoftDevice handler module for BLE events.
@@ -580,7 +732,7 @@ typedef struct
 #define SI705x_ADDR				(0x40U) // >> 1)
 #define SI705x_SCL_PIN	7
 #define SI705x_SDA_PIN	9
-#define SI705x_FREQ		NRF_TWI_FREQ_400K
+#define SI705x_FREQ		NRF_TWI_FREQ_100K
 #define SI705x_CMD_MEAS_HOLD 		0
 #define SI705x_CMD_MEAS_NO_HOLD	1
 #define SI705x_CMD_RESET				2
@@ -605,6 +757,31 @@ Si705xCmdStruct gSi705xCmdTable[SI705x_CMD_MAX] =
 	{ .cmd_id = { 0xFC, 0xC9 }, .cmd_len = 2, .param_len = 1 }	
 };
 
+
+/**
+ * @brief TWI events handler.
+ */
+void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
+{   
+    ret_code_t err_code;
+    
+    switch(p_event->type)
+    {
+        case NRF_DRV_TWI_EVT_DONE:
+            if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_TXRX)
+            {
+						   	   int x = 1;
+								x ++;
+							int y = x;
+
+            }
+
+            break;
+        default:
+            break;        
+    }   
+}
+
 /**
  * @brief I2C initialization.
  */
@@ -622,11 +799,16 @@ void twi_init (void)
        .interrupt_priority = APP_IRQ_PRIORITY_HIGH
     };
     
-    err_code = nrf_drv_twi_init(&m_twi_si_705x, &twi_si_705x_config, NULL, NULL);
+#if 0
+    err_code = nrf_drv_twi_init(&m_twi_si_705x, &twi_si_705x_config, twi_handler, NULL);
+#else
+	  err_code = nrf_drv_twi_init(&m_twi_si_705x, &twi_si_705x_config, NULL, NULL);
+#endif
     APP_ERROR_CHECK(err_code);
     
     nrf_drv_twi_enable(&m_twi_si_705x);
 }
+
 
 ret_code_t si705x_read(int cmd_id, uint8_t *ret_val)
 {
@@ -634,7 +816,7 @@ ret_code_t si705x_read(int cmd_id, uint8_t *ret_val)
 		ret_code_t err_code = nrf_drv_twi_tx(&m_twi_si_705x, SI705x_ADDR, 
 															gSi705xCmdTable[cmd_id].cmd_id, 
 															gSi705xCmdTable[cmd_id].cmd_len,
-															true);
+															false);
 
 		if (err_code)
 			return err_code;
@@ -646,16 +828,21 @@ ret_code_t si705x_read(int cmd_id, uint8_t *ret_val)
 
 uint8_t FW_VER, HW_VER;
 
+const uint32_t UICR_ADDR_0x20C    __attribute__((at(0x1000120C))) __attribute__((used)) = 0xFFFFFFFE;
 /**@brief Function for application main entry.
  */
 int main(void)
 {
     uint32_t err_code;
-    bool erase_bonds;
 
-    // Initialize.
-	
-    timers_init();
+		uint32_t nfcpins = (*(uint32_t *)0x1000120C);
+		if (nfcpins & 1)
+		{
+    //nrf_nvmc_write_word(0x1000120C, 0xFFFFFFFE);
+    NVIC_SystemReset();
+		}
+
+
 
 	  
 	  // Configure LED-pin as output
@@ -669,7 +856,9 @@ int main(void)
 	
 		// Initialize I2C Interface
     twi_init();
-	
+		
+
+#if 1
 		// Read HW and FW versions
 		err_code = si705x_read(SI705x_CMD_READ_VER_FW, &FW_VER);
 		if (err_code)
@@ -681,25 +870,95 @@ int main(void)
 		
 		uint8_t reading[3];
 		err_code = si705x_read(SI705x_CMD_MEAS_HOLD, reading);
+#endif		
+
+
+#if 0
+		uint8_t reading[3];
+		memset(&reading, 0, sizeof(reading));
+
 		
-    ble_stack_init();
-	  sd_power_dcdc_mode_set(  NRF_POWER_DCDC_ENABLE);
-    device_manager_init(erase_bonds);
+		nrf_drv_twi_xfer_desc_t xfer = NRF_DRV_TWI_XFER_DESC_TXRX(SI705x_ADDR, 
+																						gSi705xCmdTable[SI705x_CMD_MEAS_HOLD].cmd_id,
+																						gSi705xCmdTable[SI705x_CMD_MEAS_HOLD].cmd_len,
+																						reading,
+																						gSi705xCmdTable[SI705x_CMD_MEAS_HOLD].param_len);
+		err_code = nrf_drv_twi_xfer(&m_twi_si_705x, &xfer, 0);
+#endif
+    timers_init();
+	  sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
+
+	 // Initialize.
+
+	  ble_stack_init();
+		bool erase_bonds = true;
+	  device_manager_init(erase_bonds);
     gap_params_init();
+		services_init();
     advertising_init();
-    services_init();
     conn_params_init();
 
     // Start execution.
     application_timers_start();
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
+		
+		err_code = sd_ble_gap_tx_power_set(4);
+    APP_ERROR_CHECK(err_code);
+		
+
+
+
 
     // Enter main loop.
     for (;;)
     {
-        power_manage();
+        power_manage();	
+
+
     }
+}
+
+	static uint8_t test = 0x65;
+void timer_timeout_handler(void * p_context)
+{
+int err_code = 0;
+
+	//uint16_t len = sizeof(button_state);
+	ble_si705x_t * p_si705x = &m_si705x;
+
+	if (p_si705x->conn_handle != BLE_CONN_HANDLE_INVALID &&
+		  p_si705x->cccd_handle == BLE_GATT_HVX_NOTIFICATION)
+	{
+#if 1
+		uint8_t reading2[3];
+		  err_code = si705x_read(SI705x_CMD_MEAS_HOLD, reading2);
+
+		test = ((175.52  * (((uint16_t)reading2[0] << 8) | reading2[1]) / 65535) - 46.85) * 100;
+		
+	ble_gatts_hvx_params_t params;		
+	memset(&params, 0, sizeof(params));
+	params.type = BLE_GATT_HVX_NOTIFICATION;
+	params.handle = p_si705x->temp_char_handles.value_handle;
+	params.p_data = reading2;
+	uint16_t len = 3;
+	params.p_len = &len;
+		
+		//int err_code = 
+		sd_ble_gatts_hvx(p_si705x->conn_handle, &params);
+#else
+		
+  ble_gatts_value_t p_param;
+		p_param.len = 1;
+		p_param.offset = 0;
+		p_param.p_value = &test;
+
+	//	p_si705x->temp_char_handles
+  err_code = 	sd_ble_gatts_value_set(p_si705x->conn_handle, p_si705x->temp_char_handles.value_handle, &p_param);
+#endif
+	APP_ERROR_CHECK(err_code);
+	test++;
+	}
 }
 
 /**

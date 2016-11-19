@@ -45,8 +45,8 @@
 
 #define DEVICE_NAME                     "Nordic_Blinky"                             /**< Name of device. Will be included in the advertising data. */
 
-#define APP_ADV_INTERVAL                0x4000                                        /**< The advertising interval (in units of 0.625 ms; this value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_LIMITED_MAX             /**< The advertising time-out (in units of seconds). When set to 0, we will never time out. */
+#define APP_ADV_INTERVAL                300                                         /**< The advertising interval (in units of 0.625 ms; this value corresponds to 40 ms). */
+#define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising time-out (in units of seconds). When set to 0, we will never time out. */
 
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS            6                                           /**< Maximum number of simultaneously created timers. */
@@ -177,7 +177,7 @@ static void led_write_handler(ble_lbs_t * p_lbs, uint8_t led_state)
 {
     if (led_state)
     {
-        LEDS_OFF(LEDBUTTON_LED_PIN);
+        LEDS_ON(LEDBUTTON_LED_PIN);
     }
     else
     {
@@ -274,7 +274,7 @@ static void advertising_start(void)
 
     err_code = sd_ble_gap_adv_start(&adv_params);
     APP_ERROR_CHECK(err_code);
-    LEDS_OFF(ADVERTISING_LED_PIN);
+    LEDS_ON(ADVERTISING_LED_PIN);
 }
 
 
@@ -289,7 +289,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            LEDS_OFF(CONNECTED_LED_PIN);
+            LEDS_ON(CONNECTED_LED_PIN);
             LEDS_OFF(ADVERTISING_LED_PIN);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 
@@ -442,7 +442,6 @@ static void power_manage(void)
 int main(void)
 {
     // Initialize.
-	  sd_power_dcdc_mode_set( NRF_POWER_DCDC_ENABLE );
     leds_init();
     timers_init();
     buttons_init();
@@ -455,8 +454,6 @@ int main(void)
     // Start execution.
     advertising_start();
 
-
-	
     // Enter main loop.
     for (;;)
     {

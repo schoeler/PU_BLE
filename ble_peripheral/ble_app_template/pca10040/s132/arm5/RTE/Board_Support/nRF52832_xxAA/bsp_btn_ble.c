@@ -187,36 +187,7 @@ uint32_t bsp_btn_ble_sleep_mode_prepare(void)
 }
 
 
-void bsp_btn_ble_on_ble_evt(ble_evt_t * p_ble_evt)
-{
-    uint32_t err_code;
 
-    switch (p_ble_evt->header.evt_id)
-    {
-        case BLE_GAP_EVT_CONNECTED:
-            if (m_num_connections == 0)
-            {
-                err_code = connection_buttons_configure();
-                CALL_HANDLER_ON_ERROR(err_code);
-            }
-
-            m_num_connections++;
-            break;
-
-        case BLE_GAP_EVT_DISCONNECTED:
-            m_num_connections--;
-
-            if (m_num_connections == 0)
-            {
-                err_code = advertising_buttons_configure();
-                CALL_HANDLER_ON_ERROR(err_code);
-            }
-            break;
-
-        default:
-            break;
-    }
-}
 
 
 uint32_t bsp_btn_ble_init(bsp_btn_ble_error_handler_t error_handler, bsp_event_t * p_startup_bsp_evt)

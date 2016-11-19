@@ -22,19 +22,29 @@ Dialog DLL:      TCM.DLL V1.14.14.0
  
 <h2>Project:</h2>
 C:\Users\wschoele\Documents\GitHub\PU_BLE\ble_peripheral\ble_app_template\pca10040\s132\arm5\ble_app_template_s132_pca10040.uvprojx
-Project File Date:  12/18/2015
+Project File Date:  10/20/2016
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 3 (build 300)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'nrf52832_xxaa_s132'
 compiling main.c...
-..\..\..\main.c(549): warning:  #177-D: function "buttons_leds_init" was declared but never referenced
+..\..\..\drv_si705x.h(38): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\..\..\main.c(455): warning:  #177-D: variable "err_code" was declared but never referenced
+      uint32_t err_code;
+..\..\..\main.c(775): warning:  #177-D: variable "y" was declared but never referenced
+  							int y = x;
+..\..\..\main.c(766): warning:  #177-D: variable "err_code" was declared but never referenced
+      ret_code_t err_code;
+..\..\..\main.c(252): warning:  #177-D: function "temp_event_handler" was declared but never referenced
+  static void temp_event_handler(uint8_t pin_no, uint8_t button_action)
+..\..\..\main.c(701): warning:  #177-D: function "buttons_leds_init" was declared but never referenced
   static void buttons_leds_init(bool * p_erase_bonds)
-..\..\..\main.c: 1 warning, 0 errors
+..\..\..\main.c: 6 warnings, 0 errors
 linking...
-Program Size: Code=16336 RO-data=1264 RW-data=248 ZI-data=9872  
+Program Size: Code=27008 RO-data=1396 RW-data=260 ZI-data=9964  
 FromELF: creating hex file...
-".\_build\nrf52832_xxaa_s132.axf" - 0 Error(s), 1 Warning(s).
+".\_build\nrf52832_xxaa_s132.axf" - 0 Error(s), 6 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -68,6 +78,7 @@ Package Vendor: NordicSemiconductor
    * Component: nrf_delay Version: 4.0.0-2.alpha
    * Component: nrf_gpio Version: 4.0.0-2.alpha
    * Component: nrf_gpiote Version: 4.0.0-2.alpha
+   * Component: nrf_clock Version: 4.0.0-2.alpha
    * Component: nrf_uart Version: 4.0.0-2.alpha
    * Component: nrf_error Variant: default Version: 4.0.0-2.alpha
    * Component: nrf_uarte Version: 4.0.0-2.alpha
@@ -192,6 +203,9 @@ Package Vendor: NordicSemiconductor
    * Component: NordicSemiconductor::nRF_Drivers:nrf_gpiote:4.0.0-2.alpha
       Include file:  hal\nrf_gpiote.h
 
+   * Component: NordicSemiconductor::nRF_Drivers:nrf_clock:4.0.0-2.alpha
+      Include file:  hal\nrf_clock.h
+
    * Component: NordicSemiconductor::nRF_Drivers:nrf_uart:4.0.0-2.alpha
       Include file:  hal\nrf_uart.h
 
@@ -303,7 +317,7 @@ Package Vendor: NordicSemiconductor
       Include file:  headers\softdevice_assert.h
       Include file:  headers\nrf_sd_def.h
       Include file:  headers\nrf52\nrf_mbr.h
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

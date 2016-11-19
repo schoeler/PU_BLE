@@ -21,7 +21,7 @@
 .\_build\app_uart_fifo.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 .\_build\app_uart_fifo.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\hal\nrf_uarte.h
 .\_build\app_uart_fifo.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2.alpha\util\sdk_errors.h
-.\_build\app_uart_fifo.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_SoftDevice_S110\8.0.3\headers\nrf_error.h
+.\_build\app_uart_fifo.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\nrf_soc_nosd\nrf_error.h
 .\_build\app_uart_fifo.o: C:\Users\wschoele\Documents\GitHub\PU_BLE\peripheral\twi_sensor\pca10040\arm5\RTE\nRF_Drivers\nRF52832_xxAA\nrf_drv_config.h
 .\_build\app_uart_fifo.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\config\nrf_drv_config_validation.h
 .\_build\app_uart_fifo.o: C:\Users\wschoele\Documents\GitHub\PU_BLE\peripheral\twi_sensor\pca10040\arm5\RTE\nRF_Libraries\nRF52832_xxAA\nrf_assert.h

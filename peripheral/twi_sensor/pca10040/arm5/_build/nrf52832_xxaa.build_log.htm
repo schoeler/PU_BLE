@@ -22,35 +22,35 @@ Dialog DLL:      TCM.DLL V1.14.14.0
  
 <h2>Project:</h2>
 C:\Users\wschoele\Documents\GitHub\PU_BLE\peripheral\twi_sensor\pca10040\arm5\twi_sensor_pca10040.uvprojx
-Project File Date:  09/14/2016
+Project File Date:  12/18/2015
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 3 (build 300)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Rebuild target 'nrf52832_xxaa'
 assembling arm_startup_nrf52.s...
-compiling nrf_delay.c...
-compiling nrf_drv_common.c...
 compiling app_error.c...
-compiling app_uart.c...
+compiling nrf_drv_common.c...
+compiling app_fifo.c...
 compiling system_nrf52.c...
-compiling nrf_drv_gpiote.c...
+compiling app_util_platform.c...
+compiling nrf_delay.c...
 compiling nrf_drv_twi.c...
-compiling main.c...
-..\..\main.c(444): warning:  #550-D: variable "reg" was set but never used
-      uint8_t reg[] = { SI_705x_CMD_R_UR1 };
-..\..\main.c(445): warning:  #550-D: variable "reg_2" was set but never used
-  		uint8_t reg_2[] = { 0x84, 0xB8 };
-..\..\main.c(452): warning:  #177-D: variable "size" was declared but never referenced
-  		int size = sizeof(reg_2);
-..\..\main.c(173): warning:  #177-D: function "uart_config" was declared but never referenced
-  static void uart_config(void)
-..\..\main.c: 4 warnings, 0 errors
+compiling app_uart_fifo.c...
 compiling nrf_drv_uart.c...
+compiling main.c...
+..\..\main.c(287): warning:  #177-D: variable "x" was declared but never referenced
+  						   int x = 1;
+..\..\main.c(279): warning:  #177-D: variable "err_code" was declared but never referenced
+      ret_code_t err_code;
+..\..\main.c(280): warning:  #177-D: variable "m_sample" was declared but never referenced
+      static sample_t m_sample;
+..\..\main.c: 3 warnings, 0 errors
 compiling nrf_assert.c...
+compiling retarget.c...
 linking...
-Program Size: Code=5164 RO-data=1120 RW-data=60 ZI-data=8340  
+Program Size: Code=5892 RO-data=1184 RW-data=28 ZI-data=8636  
 FromELF: creating hex file...
-".\_build\nrf52832_xxaa.axf" - 0 Error(s), 4 Warning(s).
+".\_build\nrf52832_xxaa.axf" - 0 Error(s), 3 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -72,15 +72,12 @@ Package Vendor: NordicSemiconductor
                 Drivers for Nordic Semiconductor nRF family.
    * Component: nrf_delay Version: 4.0.0-2.alpha
    * Component: nrf_gpio Version: 4.0.0-2.alpha
-   * Component: nrf_gpiote Version: 4.0.0-2.alpha
-   * Component: nrf_clock Version: 4.0.0-2.alpha
    * Component: nrf_uart Version: 4.0.0-2.alpha
    * Component: nrf_error Variant: No_softdevice Version: 4.0.0-2.alpha
    * Component: nrf_uarte Version: 4.0.0-2.alpha
    * Component: nrf_twi Version: 4.0.0-2.alpha
    * Component: nrf_drv_uart Version: 4.0.0-2.alpha
    * Component: nrf_drv_twi Version: 4.0.0-2.alpha
-   * Component: nrf_drv_gpiote Version: 4.0.0-2.alpha
    * Component: nrf_drv_common Version: 4.0.0-2.alpha
 
 Package Vendor: NordicSemiconductor
@@ -95,15 +92,11 @@ Package Vendor: NordicSemiconductor
                 Software modules for Nordic Semiconductor nRF family.
    * Component: app_error Version: 4.0.0-2.alpha
    * Component: nrf_assert Version: 4.0.0-2.alpha
-   * Component: app_util Variant: default Version: 4.0.0-2.alpha
+   * Component: retarget Version: 4.0.0-2.alpha
+   * Component: app_fifo Version: 4.0.0-2.alpha
+   * Component: app_util Variant: No_softdevice Version: 4.0.0-2.alpha
    * Component: nordic_common Version: 4.0.0-2.alpha
-   * Component: app_uart Variant: default Version: 4.0.0-2.alpha
-
-Package Vendor: NordicSemiconductor
-                http://developer.nordicsemi.com/nRF51_SDK/pieces/nRF_SoftDevice_Common/NordicSemiconductor.nRF_SoftDevice_Common.2.0.0-2.alpha.pack
-                NordicSemiconductor::nRF_SoftDevice:Internal:softdevice_present:2.0.0-2.alpha
-                Common components for Nordic Semiconductor nRF family SoftDevices.
-   * Component: softdevice_present Version: 2.0.0-2.alpha
+   * Component: app_uart Variant: Fifo Version: 4.0.0-2.alpha
 
 <h2>Collection of Component include folders:</h2>
   C:\Users\wschoele\Documents\GitHub\PU_BLE\peripheral\twi_sensor\pca10040\arm5\RTE
@@ -115,12 +108,12 @@ Package Vendor: NordicSemiconductor
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\common
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\config
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\delay
-  C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\gpiote
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\hal
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\nrf_soc_nosd
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\twi_master
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\uart
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Examples\11.0.0-2.alpha\bsp
+  C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2.alpha\fifo
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2.alpha\uart
   C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2.alpha\util
 
@@ -139,12 +132,6 @@ Package Vendor: NordicSemiconductor
 
    * Component: NordicSemiconductor::nRF_Drivers:nrf_gpio:4.0.0-2.alpha
       Include file:  hal\nrf_gpio.h
-
-   * Component: NordicSemiconductor::nRF_Drivers:nrf_gpiote:4.0.0-2.alpha
-      Include file:  hal\nrf_gpiote.h
-
-   * Component: NordicSemiconductor::nRF_Drivers:nrf_clock:4.0.0-2.alpha
-      Include file:  hal\nrf_clock.h
 
    * Component: NordicSemiconductor::nRF_Drivers:nrf_uart:4.0.0-2.alpha
       Include file:  hal\nrf_uart.h
@@ -167,11 +154,6 @@ Package Vendor: NordicSemiconductor
       Include file:  twi_master\nrf_drv_twi.h
       Include file:  config\nrf_drv_config.h
 
-   * Component: NordicSemiconductor::nRF_Drivers:nrf_drv_gpiote:4.0.0-2.alpha
-      Source file:   gpiote\nrf_drv_gpiote.c
-      Include file:  gpiote\nrf_drv_gpiote.h
-      Include file:  config\nrf_drv_config.h
-
    * Component: NordicSemiconductor::nRF_Drivers:nrf_drv_common:4.0.0-2.alpha
       Source file:   common\nrf_drv_common.c
       Include file:  common\nrf_drv_common.h
@@ -187,16 +169,22 @@ Package Vendor: NordicSemiconductor
       Source file:   util\nrf_assert.c
       Include file:  util\nrf_assert.h
 
-   * Component: NordicSemiconductor::nRF_Libraries:app_util:default:4.0.0-2.alpha
+   * Component: NordicSemiconductor::nRF_Libraries:retarget:4.0.0-2.alpha
+      Source file:   uart\retarget.c
+
+   * Component: NordicSemiconductor::nRF_Libraries:app_fifo:4.0.0-2.alpha
+      Source file:   fifo\app_fifo.c
+      Include file:  fifo\app_fifo.h
+
+   * Component: NordicSemiconductor::nRF_Libraries:app_util:No_softdevice:4.0.0-2.alpha
+      Source file:   util\app_util_platform.c
 
    * Component: NordicSemiconductor::nRF_Libraries:nordic_common:4.0.0-2.alpha
 
-   * Component: NordicSemiconductor::nRF_Drivers:app_uart:default:4.0.0-2.alpha
-      Source file:   uart\app_uart.c
+   * Component: NordicSemiconductor::nRF_Drivers:app_uart:Fifo:4.0.0-2.alpha
+      Source file:   uart\app_uart_fifo.c
       Include file:  uart\app_uart.h
-
-   * Component: NordicSemiconductor::nRF_SoftDevice:Internal:softdevice_present:2.0.0-2.alpha
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:05
 </pre>
 </body>
 </html>

@@ -20,3 +20,8 @@
 .\_build\app_error.o: RTE\nRF_Libraries\nRF52832_xxAA\nrf_log.h
 .\_build\app_error.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
 .\_build\app_error.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\4.0.0-2.alpha\util\app_util.h
+.\_build\app_error.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Examples\11.0.0-2.alpha\bsp\bsp.h
+.\_build\app_error.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Examples\11.0.0-2.alpha\bsp\boards.h
+.\_build\app_error.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\4.0.0-2.alpha\hal\nrf_gpio.h
+.\_build\app_error.o: C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Examples\11.0.0-2.alpha\bsp\pca10040.h
+.\_build\app_error.o: C:\Users\wschoele\Documents\GitHub\PU_BLE\ble_peripheral\ble_app_template\pca10040\s132\arm5\RTE\nRF_Libraries\nRF52832_xxAA\app_button.h

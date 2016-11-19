@@ -27,10 +27,6 @@
 #include "app_error.h"
 #include "nrf_drv_twi.h"
 #include "nrf_delay.h"
-#include "nrf.h"
-#include "nrf_gpio.h"
-#include "nrf_drv_gpiote.h"
-#include "nrf_gpiote.h"
 
 /*Pins to connect shield. */
 #define ARDUINO_I2C_SCL_PIN 7
@@ -132,7 +128,7 @@ static volatile bool m_xfer_done = true;
 /* Indicates if setting mode operation has ended. */
 static volatile bool m_set_mode_done = false;
 /* TWI instance. */
-static const nrf_drv_twi_t m_twi_si_705x = NRF_DRV_TWI_INSTANCE(0);
+static const nrf_drv_twi_t m_twi_mma_7660 = NRF_DRV_TWI_INSTANCE(0);
 
 /**
  * @brief Function for casting 6 bit uint to 6 bit int.
@@ -194,45 +190,21 @@ static void uart_config(void)
     APP_ERROR_CHECK(err_code);
 }
 
+
 /**
  * @brief Function for setting active mode on MMA7660 accelerometer.
  */
-
-typedef struct 
+void MMA7660_set_mode(void)
 {
-		uint8_t cmd_id[2];
-		uint8_t cmd_len;
-	  uint8_t param_len;
-} Si705xCmdStruct;
+    ret_code_t err_code;
+    /* Writing to MMA7660_REG_MODE "1" enables the accelerometer. */
+    uint8_t reg[2] = {MMA7660_REG_MODE, ACTIVE_MODE};
 
-#define SI705x_ADDR				(0x40U) // >> 1)
-#define SI705x_SCL_PIN	7
-#define SI705x_SDA_PIN	9
-#define SI705x_FREQ		NRF_TWI_FREQ_400K
-#define SI705x_CMD_MEAS_HOLD 		0
-#define SI705x_CMD_MEAS_NO_HOLD	1
-#define SI705x_CMD_RESET				2
-#define SI705x_CMD_WRITE_UR1		3
-#define SI705x_CMD_READ_UR1			4
-#define SI705x_CMD_READ_EID_B1	5
-#define SI705x_CMD_READ_EID_B2	6
-#define SI705x_CMD_READ_VER_FW	7
-#define SI705x_CMD_READ_VER_HW	8
-#define SI705x_CMD_MAX					9
-
-Si705xCmdStruct gSi705xCmdTable[SI705x_CMD_MAX] = 
-{ 
-	{ .cmd_id = { 0xE3 }, 			.cmd_len = 1,	.param_len = 3},
-	{ .cmd_id = { 0xF3 }, 			.cmd_len = 1,	.param_len = 3},
-	{ .cmd_id = { 0xFE }, 			.cmd_len = 1, .param_len = 0},
-	{ .cmd_id = { 0xE6 }, 			.cmd_len = 1, .param_len = 1},
-	{ .cmd_id = { 0xE7 }, 			.cmd_len = 1, .param_len = 1},
-	{ .cmd_id = { 0xFA, 0x0F },	.cmd_len = 2, .param_len = 8 },
-	{ .cmd_id = { 0xFC, 0xC9 },	.cmd_len = 2, .param_len = 6 },
-	{ .cmd_id = { 0x84, 0xB8 }, .cmd_len = 2, .param_len = 1 },
-	{ .cmd_id = { 0xFC, 0xC9 }, .cmd_len = 2, .param_len = 1 }	
-};
-
+    err_code = nrf_drv_twi_tx(&m_twi_mma_7660, MMA7660_ADDR, reg, sizeof(reg), false);  
+    APP_ERROR_CHECK(err_code);
+    
+    while(m_set_mode_done == false);
+}
 
 /**
  * @brief Function for averaging samples from accelerometer.
@@ -310,155 +282,66 @@ void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
     switch(p_event->type)
     {
         case NRF_DRV_TWI_EVT_DONE:
-            if ((p_event->type == NRF_DRV_TWI_EVT_DONE) &&
-                (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_TX))
+            if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_TXRX)
             {
-                if(m_set_mode_done != true)
-                {
-                    m_set_mode_done  = true;
-                    return;
-                }
-                m_xfer_done = false;
-                /* Read 4 bytes from the specified address. */
-                err_code = nrf_drv_twi_rx(&m_twi_si_705x, SI705x_ADDR, (uint8_t*)&m_sample, sizeof(m_sample));
-                APP_ERROR_CHECK(err_code);
+						   int x = 1;
+								x ++;
+							int y = x;
+
             }
-            else
-            {
-                read_data(&m_sample);
-                m_xfer_done = true;
-            }
+
             break;
         default:
             break;        
     }   
 }
 
-
 /**
- * @brief I2C initialization.
+ * @brief UART initialization.
  */
 void twi_init (void)
 {
     ret_code_t err_code;
-
-    const nrf_drv_twi_config_t twi_si_705x_config = {
-       .scl                = SI705x_SCL_PIN,
-       .sda                = SI705x_SDA_PIN,
-       .frequency          = SI705x_FREQ,
+    
+    const nrf_drv_twi_config_t twi_mma_7660_config = {
+       .scl                = ARDUINO_SCL_PIN,
+       .sda                = ARDUINO_SDA_PIN,
+       .frequency          = NRF_TWI_FREQ_100K,
        .interrupt_priority = APP_IRQ_PRIORITY_HIGH
     };
     
-    err_code = nrf_drv_twi_init(&m_twi_si_705x, &twi_si_705x_config, NULL, NULL);
+    err_code = nrf_drv_twi_init(&m_twi_mma_7660, &twi_mma_7660_config, twi_handler, NULL);
     APP_ERROR_CHECK(err_code);
     
-    nrf_drv_twi_enable(&m_twi_si_705x);
+    nrf_drv_twi_enable(&m_twi_mma_7660);
 }
 
-
-#define LEDS_CONFIGURE(leds_mask) do { uint32_t pin;                  \
-                                  for (pin = 0; pin < 32; pin++) \
-                                      if ( (leds_mask) & (1 << pin) )   \
-                                          nrf_gpio_cfg_output(pin); } while (0)
-
-#define LEDS_ON(leds_mask) do {  NRF_GPIO->OUTCLR = (leds_mask) & (LEDS_MASK & LEDS_INV_MASK); \
-                           NRF_GPIO->OUTSET = (leds_mask) & (LEDS_MASK & ~LEDS_INV_MASK); } while (0)
-
-ret_code_t si705x_read(int cmd_id, uint8_t *ret_val)
-{
-		/* Start transaction with a slave with the specified address. */
-		ret_code_t err_code = nrf_drv_twi_tx(&m_twi_si_705x, SI705x_ADDR, 
-															gSi705xCmdTable[cmd_id].cmd_id, 
-															gSi705xCmdTable[cmd_id].cmd_len,
-															true);
-
-		if (err_code)
-			return err_code;
-		
-		err_code = nrf_drv_twi_rx(&m_twi_si_705x, SI705x_ADDR, ret_val, gSi705xCmdTable[cmd_id].param_len);
-
-		return err_code;
-}
-
-
-
-uint8_t FW_VER, HW_VER;
 /**
  * @brief Function for main application entry.
  */
 int main(void)
 {
-		// Unlock the NFC pins as GPIO
-#if 0
-		uint32_t nfcpins = (*(uint32_t *)0x1000120C);
-		if (nfcpins & 1) {
-				nrf_nvmc_write_word(0x1000120C, 0xFFFFFFFE);
-				NVIC_SystemReset();
-		}
-#endif
-		
-	  // Configure LED-pin as output
-    LEDS_CONFIGURE(1 << 26);
-
-    // Toggle LED
-		LEDS_INVERT(1 << 26);
-		nrf_delay_ms(500);
-
-		LEDS_INVERT(1 << 26);
-		nrf_delay_ms(500);
-
-    ret_code_t err_code;
-#if 0	
-		err_code = nrf_drv_gpiote_init();
-    APP_ERROR_CHECK(err_code);
-	
-	  nrf_drv_gpiote_out_config_t config = GPIOTE_CONFIG_OUT_TASK_TOGGLE(false);
-    err_code = nrf_drv_gpiote_out_init(7, &config); 
-		nrf_drv_gpiote_out_set(7);
-	
-	  err_code = nrf_drv_gpiote_out_init(9, &config); 
-		nrf_drv_gpiote_out_set(9);
-		#endif		
-		// Initialize I2C Interface
+    uart_config();
+   // int a = __GNUC__, c = __GNUC_PATCHLEVEL__;
+    printf("\n\rTWI sensor example\r\n");
     twi_init();
-		
-		// Read HW and FW versions
-		err_code = si705x_read(SI705x_CMD_READ_VER_FW, &FW_VER);
-		if (err_code)
-			while(1);
-		
-		err_code = si705x_read(SI705x_CMD_READ_VER_HW, &HW_VER);
-		if (err_code)
-			while(1);
-		
-		uint8_t reading[3];
-		err_code = si705x_read(SI705x_CMD_MEAS_HOLD, reading);
-		
-		uint8_t reading2[3];
-		err_code = si705x_read(SI705x_CMD_MEAS_NO_HOLD, reading2);
-		
-		
-#define SI_705x_CMD_R_UR1	0xE7
-#define SI_705x_CMD_W_UR1	0xE6
-	
-    uint8_t reg[] = { SI_705x_CMD_R_UR1 };
-		uint8_t reg_2[] = { 0x84, 0xB8 };
-
-		uint8_t reg_temp[] = { 0xE3 };
-		
-		
+    MMA7660_set_mode(); 
     
-		/* Start transaction with a slave with the specified address. */
-		int size = sizeof(reg_2);
-		err_code = nrf_drv_twi_tx(&m_twi_si_705x, SI705x_ADDR, reg_temp, sizeof(reg_temp), true);
-
-	
-		reg[0] = 0x00;
-		uint8_t reg_temp_r[2] = { 0 };
-		
-		err_code = nrf_drv_twi_rx(&m_twi_si_705x, SI705x_ADDR, reg_temp_r, sizeof(reg_temp_r));
-
-		m_xfer_done = false;
+    uint8_t reg = 0;
+    ret_code_t err_code;
+    
+    while(true)
+    {
+        nrf_delay_ms(100);
+        /* Start transaction with a slave with the specified address. */
+        do
+        {
+            __WFE();
+        }while(m_xfer_done == false);
+        err_code = nrf_drv_twi_tx(&m_twi_mma_7660, MMA7660_ADDR, &reg, sizeof(reg), true);
+        APP_ERROR_CHECK(err_code);
+        m_xfer_done = false;
+    }
 }
 
 /** @} */
